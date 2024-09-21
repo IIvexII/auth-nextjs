@@ -1,23 +1,27 @@
 'use server';
 
-import { createUser, isEmailExists } from '@/drizzle/queries';
+import {
+  createUser,
+  isEmailExists,
+  validateCredentials,
+} from '@/drizzle/queries';
 import { createSession } from '@/lib/lucia';
 import { hashPassword } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 
-interface signupFormState {
+interface authFormState {
   email?: string;
   password?: string;
   general?: string;
 }
 
 export async function signup(
-  _: signupFormState,
+  _: authFormState,
   formData: FormData
-): Promise<signupFormState> {
+): Promise<authFormState> {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
-  const errors: signupFormState = {};
+  const errors: authFormState = {};
 
   if (!email || !email.includes('@')) {
     errors.email = 'Invalid email address';
@@ -48,4 +52,37 @@ export async function signup(
   await createSession(userId);
 
   redirect('/login');
+}
+
+export async function login(
+  _: authFormState,
+  formData: FormData
+): Promise<authFormState> {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const errors: authFormState = {};
+
+  if (!email || !email.includes('@') || !password || password.length < 8) {
+    errors.general = 'Invalid email or password';
+    return errors;
+  }
+
+  let userId: string | null;
+  // Save user to database
+  try {
+    userId = await validateCredentials(email, password);
+
+    if (!userId) {
+      errors.general = 'Invalid email or password';
+      return errors;
+    }
+
+    // create session
+  } catch (error) {
+    return errors;
+  }
+
+  await createSession(userId);
+
+  redirect('/');
 }

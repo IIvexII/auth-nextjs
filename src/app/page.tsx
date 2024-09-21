@@ -1,10 +1,11 @@
 import { validateRequest } from '@/lib/lucia';
+import { redirect } from 'next/navigation';
 
 export default async function Home() {
   const session = await validateRequest();
 
   if (session.user === null) {
-    return <>Unauthorized</>;
+    redirect('/login');
   }
   return <>Protected</>;
 }

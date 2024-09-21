@@ -17,6 +17,13 @@ export const lucia = new Lucia(adapter, {
 });
 
 export async function createSession(userId: string) {
+  // if user is already logged in, invalidate the sessions
+  const existingSession = await lucia.getUserSessions(userId);
+
+  for (const session of existingSession) {
+    await lucia.invalidateSession(session.id);
+  }
+
   const session = await lucia.createSession(userId, {});
   const sessionCookie = lucia.createSessionCookie(session.id);
   cookies().set(
@@ -49,6 +56,7 @@ export const validateRequest = cache(
           sessionCookie.attributes
         );
       }
+
       if (!result.session) {
         const sessionCookie = lucia.createBlankSessionCookie();
         cookies().set(
@@ -58,6 +66,7 @@ export const validateRequest = cache(
         );
       }
     } catch {}
+
     return result;
   }
 );
@@ -65,9 +74,13 @@ export const validateRequest = cache(
 export async function logout() {
   const { session } = await validateRequest();
   if (!session) {
-    return {
-      error: 'Unauthorized',
-    };
+    const sessionCookie = lucia.createBlankSessionCookie();
+    cookies().set(
+      sessionCookie.name,
+      sessionCookie.value,
+      sessionCookie.attributes
+    );
+    return;
   }
 
   await lucia.invalidateSession(session.id);

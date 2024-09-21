@@ -12,22 +12,11 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ToastAction } from '@/components/ui/toast';
-import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useFormState } from 'react-dom';
 
 export default function SignupPage() {
   const [formState, formAction] = useFormState(actions.signup, {});
-
-  if (formState.general) {
-    toast({
-      variant: 'destructive',
-      title: 'Uh oh! Something went wrong.',
-      description: formState.general,
-      action: <ToastAction altText='Try again'>Try again</ToastAction>,
-    });
-  }
 
   return (
     <form
@@ -68,6 +57,9 @@ export default function SignupPage() {
               )}
             </div>
           </div>
+          {formState.general && (
+            <p className='text-red-600 text-sm'>{formState.general}</p>
+          )}
         </CardContent>
         <CardFooter className='grid gap-4'>
           <Button type='submit' className='w-full'>

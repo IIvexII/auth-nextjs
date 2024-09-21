@@ -1,6 +1,7 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from './db';
 import { user } from './schema';
+import { verifyPassword } from '@/lib/utils';
 
 export async function createUser(email: string, password: string) {
   try {
@@ -15,6 +16,20 @@ export async function createUser(email: string, password: string) {
     return userId[0].id;
   } catch (error) {
     throw 'Failed to create the user. Please try again later';
+  }
+}
+
+export async function validateCredentials(email: string, password: string) {
+  const users = await db.select().from(user).where(eq(user.email, email));
+
+  if (users.length === 0) {
+    return null;
+  }
+
+  if (await verifyPassword(password, users[0].password)) {
+    return users[0].id;
+  } else {
+    return null;
   }
 }
 

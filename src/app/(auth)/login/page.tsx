@@ -1,3 +1,4 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,9 +12,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 
+import * as actions from '@/action/auth-actions';
+import { useFormState } from 'react-dom';
+
 export default function LoginPage() {
+  const [formState, formAction] = useFormState(actions.login, {});
+
   return (
-    <form className='min-h-screen flex justify-center items-center'>
+    <form
+      action={formAction}
+      className='min-h-screen flex justify-center items-center'
+    >
       <Card className='w-full max-w-sm'>
         <CardHeader>
           <CardTitle className='text-2xl'>Login</CardTitle>
@@ -47,6 +56,9 @@ export default function LoginPage() {
               />
             </div>
           </div>
+          {formState?.general && (
+            <p className='text-red-600 text-sm'>{formState.general}</p>
+          )}
         </CardContent>
         <CardFooter className='grid gap-4'>
           <Button type='submit' className='w-full'>
