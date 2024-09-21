@@ -1,6 +1,7 @@
 'use server';
 
 import { createUser, isEmailExists } from '@/drizzle/queries';
+import { createSession } from '@/lib/lucia';
 import { hashPassword } from '@/lib/utils';
 import { redirect } from 'next/navigation';
 
@@ -32,15 +33,19 @@ export async function signup(
     return errors;
   }
 
+  let userId: string;
   // Save user to database
   try {
     // convert the password into hash
     const hashedPassword = await hashPassword(password);
 
-    await createUser(email, hashedPassword);
+    userId = await createUser(email, hashedPassword);
+    // create session
   } catch (error) {
     return errors;
   }
+
+  await createSession(userId);
 
   redirect('/login');
 }

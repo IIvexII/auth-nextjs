@@ -1,13 +1,18 @@
 import { eq } from 'drizzle-orm';
 import { db } from './db';
-import { userTable } from './schema';
+import { user } from './schema';
 
 export async function createUser(email: string, password: string) {
   try {
-    return db.insert(userTable).values({
-      email,
-      password,
-    });
+    const userId = await db
+      .insert(user)
+      .values({
+        email,
+        password,
+      })
+      .returning({ id: user.id });
+
+    return userId[0].id;
   } catch (error) {
     throw 'Failed to create the user. Please try again later';
   }
@@ -15,10 +20,7 @@ export async function createUser(email: string, password: string) {
 
 // check user exists
 export async function isEmailExists(email: string): Promise<boolean> {
-  const user = await db
-    .select()
-    .from(userTable)
-    .where(eq(userTable.email, email));
+  const users = await db.select().from(user).where(eq(user.email, email));
 
-  return user.length > 0 ? true : false;
+  return users.length > 0 ? true : false;
 }
